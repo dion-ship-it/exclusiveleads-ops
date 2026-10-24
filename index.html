@@ -135,6 +135,17 @@ svg text{fill:var(--mute);font-size:10px}
 .bub .meta{display:block;text-align:right;font-size:11.5px;color:var(--mute);margin-top:2px}
 .wa-empty{display:grid;place-items:center;height:100%;color:var(--mute)}
 .back{display:none}
+.rep{background:#fff;color:#14181f;border:1px solid var(--line);border-radius:var(--r-l);padding:34px 38px;max-width:900px}
+.rep h1{color:#14181f;margin:0}.rep .sub{color:#5b6472;margin:4px 0 26px}
+.rep .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:26px}
+.rep .tile{border:1px solid #e3e6ea;border-radius:12px;padding:14px 16px}.rep .tile .n{font-size:28px;font-weight:700;color:#14181f}.rep .tile .l{color:#5b6472;font-size:13.5px}
+.rep h2{color:#14181f;font-size:17px;margin:26px 0 10px}
+.fun{display:flex;flex-direction:column;gap:6px}.fun .r{display:grid;grid-template-columns:200px 1fr 60px;gap:12px;align-items:center;font-size:14.5px}
+.fun .bar{height:22px;border-radius:6px;background:#2f6db5}.fun .n{text-align:right;font-weight:700}
+.rep .foot{color:#8a929e;font-size:12.5px;margin-top:28px;border-top:1px solid #e3e6ea;padding-top:12px}
+.rep .bars text{fill:#8a929e}
+@media (max-width:700px){.rep{padding:20px}.rep .tiles{grid-template-columns:1fr 1fr}.fun .r{grid-template-columns:120px 1fr 44px}}
+@media print{aside,.noprint,#tipbox,.toast{display:none!important}.shell{display:block}main{padding:0!important}body{background:#fff}.rep{border:0;padding:0;max-width:none}}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
 .seg button{border:0;background:none;padding:5px 12px;border-radius:999px;cursor:pointer;color:var(--mute);font:inherit;font-size:13.5px}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
@@ -197,9 +208,10 @@ details.panel summary{cursor:pointer}details.panel ul{padding-left:20px}
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 const sb = createClient('https://inlqcnzjhmtahdzfqtvj.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlubHFjbnpqaG10YWhkemZxdHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDIzMTgsImV4cCI6MjA5MTc3ODMxOH0.hgF3hj346Py6SHy1rVM8UvACr0W-tvfNk-OxZzKeN0M');
-const VIEWS = [['home','Overzicht'],['chats','Chats'],['bot','Bot'],['flow','Gespreksflow'],['garantie','Garantie'],['arm','ARM-claimer'],['backup','Backups'],['alerts','Meldingen']];
+const VIEWS = [['home','Overzicht'],['chats','Chats'],['bot','Bot'],['flow','Gespreksflow'],['garantie','Garantie'],['rapport','Klantrapport'],['arm','ARM-claimer'],['backup','Backups'],['alerts','Meldingen']];
 let view = (() => { try { return localStorage.getItem('opsView') || 'home'; } catch { return 'home'; } })();
 let D = { S: {}, arm: [], daily: [], alerts: [], settings: {}, vacs: [], orgs: {}, defaults: {} };
+let R = { org: null, camps: null, period: 'last_30d' };
 let mkPeriod = (() => { try { return localStorage.getItem('mkPeriod') || 'last_7d'; } catch { return 'last_7d'; } })();
 let flowSel = null, flowDraft = null, flowDirty = false, showArchive = false;
 let CH = { msgs: [], convs: [], sel: null, q: '', loadedAt: 0 };
@@ -245,7 +257,7 @@ function health() {
     server: fresh(S.server?.updated_at) ? 'ok' : 'bad',
     bot: !botOn ? 'bad' : S.bot.data.wa_status !== 'connected' ? 'warn' : paused ? 'warn' : 'ok',
     flow: D.vacs.length && D.vacs.some((v) => v.active && !v.archived_at && flowWarnings(v).length) ? 'warn' : 'off',
-    chats: 'off', garantie: 'off',
+    chats: 'off', garantie: 'off', rapport: 'off',
     arm: S.arm?.data?.claimed ? 'ok' : S.arm?.data?.paused ? 'warn' : fresh(S.arm?.updated_at) ? 'ok' : 'bad',
     backup: S.backup?.data?.ok && fresh(S.backup.updated_at, 26 * 60) ? 'ok' : 'bad',
     alerts: open.some((a) => a.severity === 'critical') ? 'bad' : open.length ? 'warn' : 'ok',
@@ -258,7 +270,7 @@ function render() {
   $('#nav').innerHTML = VIEWS.map(([k, l]) => `<button class="nav" data-v="${k}" ${k === view ? 'aria-current="page"' : ''}>${l}${k === 'alerts' && openN ? ` (${openN})` : ''}${k === 'home' ? '' : `<span class="d ${h[k] || 'off'}"></span>`}</button>`).join('');
   if (view === 'flow' && flowSel && document.querySelector('#flowform')) { renderFlowPreviewOnly(); return; }
   if (view === 'chats' && document.querySelector('.wa')) { renderChatsInPlace(); return; }
-  $('#view').innerHTML = ({ home: vHome, chats: vChats, bot: vBot, flow: vFlow, garantie: vGarantie, arm: vArm, backup: vBackup, alerts: vAlerts })[view]();
+  $('#view').innerHTML = ({ home: vHome, chats: vChats, bot: vBot, flow: vFlow, garantie: vGarantie, rapport: vRapport, arm: vArm, backup: vBackup, alerts: vAlerts })[view]();
   if (view === 'bot') { const l = document.querySelector('pre.log'); if (l) l.scrollTop = l.scrollHeight; }
 }
 
@@ -360,6 +372,66 @@ function vMarketing() {
     ${fun ? `<div class="scroll" style="margin-top:14px"><h2 style="font-size:16px">Opvolging door de bot, laatste 30 dagen${tip('Wat er met de leads gebeurt nadat ze binnenkomen. Reageerde en de snelheid tellen vanaf 20 oktober, toen de bot alle berichten begon op te slaan.')}</h2><table><tr><th>Vacature</th><th class="n">Leads</th><th class="n">Benaderd</th><th class="n">Reageerde</th><th class="n">Afgerond</th><th class="n">Eerste bericht na${tip('Mediane tijd tussen binnenkomst van de lead en het eerste WhatsApp-bericht. Hoog zolang het opbouwschema het aantal nieuwe gesprekken per dag beperkt of de bot op pauze staat.')}</th></tr>${fun}</table></div>` : ''}
     ${m.errors?.length ? `<p class="bad small">${esc(m.errors.join(' | '))}</p>` : ''}
     <p class="mute small" style="margin:10px 0 0">Bijgewerkt ${ago(r.updated_at)}.</p></div>`;
+}
+
+
+/* ── Klantrapport (zonder kosten) ────────────────────────── */
+const PNAME = { last_7d: 'laatste 7 dagen', last_30d: 'laatste 30 dagen', lifetime: 'sinds de start van de campagne' };
+const fmtN = (n) => Number(n || 0).toLocaleString('nl-NL');
+const norm = (x) => String(x || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function rapportData() {
+  const g = D.S.garantie?.data, m = D.S.marketing?.data; if (!g || !m) return null;
+  const orgs = Object.entries(g.orgs).filter(([, o]) => !/demo|test/i.test(o.name));
+  if (!R.org || !g.orgs[R.org]) R.org = orgs[0]?.[0];
+  const o = g.orgs[R.org], key = norm(o.name).slice(0, 6);
+  if (!R.camps || R.camps.org !== R.org) R.camps = { org: R.org, ids: m.campaigns.filter((c) => norm(c.name).includes(key)).map((c) => c.id) };
+  const camps = m.campaigns.filter((c) => R.camps.ids.includes(c.id));
+  const sum = (f) => camps.reduce((a, c) => a + ((c[R.period] || {})[f] || 0), 0);
+  const imp = sum('impressions'), clicks = sum('clicks');
+  const tot = { reach: sum('reach'), impressions: imp, clicks, leads: sum('leads'), ctr: imp ? (clicks / imp) * 100 : 0 };
+  const days = R.period === 'last_7d' ? 7 : R.period === 'last_30d' ? 30 : null;
+  const since = days ? Date.now() - days * 864e5 : 0;
+  const pipe = (o.pipeline || []).filter((p) => new Date(p.created).getTime() >= since);
+  const ge = (n) => pipe.filter((p) => p.stage >= n).length;
+  const funnel = [['Kandidaten binnengekomen', pipe.length], ['Opgevolgd', ge(1)], ['Gebeld', ge(2)], ['Kennismaking gepland', ge(3)], ['Positief na kennismaking', ge(4)], ['Aangenomen', ge(5)]];
+  const daily = {}; for (const c of camps) for (const d of c.daily || []) { daily[d.d] = (daily[d.d] || 0) + d.leads; }
+  const dd = Object.entries(daily).sort().map(([d, leads]) => ({ d, leads, spend: 0 })).slice(-(days || 60));
+  return { orgs, o, camps, tot, funnel, dd, all: m.campaigns, start: camps.map((c) => c.start).filter(Boolean).sort()[0] };
+}
+function vRapport() {
+  const r = rapportData(); if (!r) return '<h1>Klantrapport</h1><p class="lede">Nog geen data van de server.</p>';
+  const seg = [['last_7d', '7 dagen'], ['last_30d', '30 dagen'], ['lifetime', 'Hele campagne']].map(([k, l]) => `<button data-rp="${k}" aria-pressed="${k === R.period}">${l}</button>`).join('');
+  const max = Math.max(1, ...r.funnel.map((f) => f[1]));
+  const periodTxt = R.period === 'lifetime' && r.start ? `sinds ${new Date(r.start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}` : PNAME[R.period];
+  return `<div class="noprint"><h1>Klantrapport</h1><p class="lede">Overzicht om met de klant te delen. Kosten, kosten per lead en CPM staan er bewust niet in.</p>
+    <div class="panel"><div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+      <label class="small">Klant <select id="rporg" style="margin-left:6px">${r.orgs.map(([id, o]) => `<option value="${id}" ${id === R.org ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}</select></label>
+      <div class="seg" role="group" aria-label="Periode">${seg}</div>
+      <button class="btn pri" data-act="rpprint">Download als PDF</button><button class="btn" data-act="rpcsv">Download CSV</button></div>
+      <details style="margin-top:12px"><summary class="small">Campagnes in dit rapport (${r.camps.length})</summary><div style="margin-top:8px">${r.all.map((c) => `<label class="check" style="margin-bottom:4px"><input type="checkbox" data-rpc="${c.id}" ${R.camps.ids.includes(c.id) ? 'checked' : ''}><span>${esc(c.name)} <span class="mute small">${c.status === 'ACTIVE' ? 'loopt' : 'gestopt'}</span></span></label>`).join('')}</div></details></div></div>
+  <div class="rep" id="rep">
+    <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start"><div><h1>Resultaten ${esc(r.o.name)}</h1><p class="sub">Wervingscampagne via Facebook en Instagram, ${esc(periodTxt)}</p></div><img src="logo-icon.png" alt="ExclusiveLeads" width="44" height="44" style="border-radius:10px"></div>
+    <div class="tiles">
+      <div class="tile"><div class="n">${fmtN(r.tot.reach)}</div><div class="l">mensen bereikt in de doelgroep</div></div>
+      <div class="tile"><div class="n">${fmtN(r.tot.impressions)}</div><div class="l">keer de vacature getoond</div></div>
+      <div class="tile"><div class="n">${fmtN(r.tot.clicks)}</div><div class="l">klikken op de advertentie</div></div>
+      <div class="tile"><div class="n">${r.tot.ctr.toLocaleString('nl-NL', { maximumFractionDigits: 1 })}%</div><div class="l">klikratio (bij Facebook-advertenties is rond 1% gebruikelijk)</div></div>
+      <div class="tile"><div class="n">${fmtN(r.tot.leads)}</div><div class="l">kandidaten met interesse</div></div>
+      <div class="tile"><div class="n">${fmtN(r.funnel[5][1])}</div><div class="l">aangenomen</div></div>
+    </div>
+    <h2>Van interesse tot aanname</h2>
+    <div class="fun">${r.funnel.map(([l, n]) => `<div class="r"><span>${l}</span><div class="bar" style="width:${Math.max(2, (n / max) * 100)}%"></div><span class="n">${fmtN(n)}</span></div>`).join('')}</div>
+    <p class="small" style="color:#5b6472;margin-top:8px">Op basis van het Trello-bord: de hoogste stap die elke kandidaat heeft bereikt.</p>
+    ${r.dd.length ? `<h2>Kandidaten per dag${R.period === 'lifetime' ? ', laatste 60 dagen' : ''}</h2>${leadBars(r.dd)}` : ''}
+    <div class="foot">Opgesteld door ExclusiveLeads op ${new Date().toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}. Cijfers over bereik, vertoningen en klikken komen rechtstreeks uit Meta Ads.</div>
+  </div>`;
+}
+function rapportCsv() {
+  const r = rapportData(); if (!r) return;
+  const rows = [['Klant', r.o.name], ['Periode', PNAME[R.period]], ['Bereik', r.tot.reach], ['Vertoningen', r.tot.impressions], ['Klikken', r.tot.clicks], ['Klikratio %', r.tot.ctr.toFixed(2)], ['Kandidaten (leads)', r.tot.leads], ...r.funnel, [], ['Datum', 'Kandidaten'], ...r.dd.map((d) => [d.d, d.leads])];
+  const csv = rows.map((x) => x.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+  a.download = `rapport-${norm(r.o.name)}-${R.period}.csv`; a.click();
 }
 
 /* ── Bot ─────────────────────────────────────────────────── */
@@ -632,9 +704,13 @@ document.addEventListener('click', async (e) => {
   if (ch) { CH.sel = ch.dataset.chat; renderChatsInPlace(); const b = $('#wamsgs'); if (b) b.scrollTop = b.scrollHeight; return; }
   const go = e.target.closest('[data-gorg]');
   if (go) { G.sel = go.dataset.gorg; $('#view').innerHTML = vGarantie(); window.scrollTo(0, 0); return; }
+  const rp = e.target.closest('[data-rp]');
+  if (rp) { R.period = rp.dataset.rp; render(); return; }
   const mk = e.target.closest('[data-mk]');
   if (mk) { mkPeriod = mk.dataset.mk; try { localStorage.setItem('mkPeriod', mkPeriod); } catch {} render(); return; }
   const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'rpprint') { const t = document.title; document.title = 'Rapport ' + (rapportData()?.o.name || ''); window.print(); document.title = t; return; }
+  if (act === 'rpcsv') { rapportCsv(); return; }
   if (act === 'chatback') { CH.sel = null; renderChatsInPlace(); return; }
   if (act === 'gback') { G.sel = null; $('#view').innerHTML = vGarantie(); return; }
   if (act === 'togglearchive') { showArchive = !showArchive; rerenderFlow(); return; }
@@ -670,6 +746,10 @@ document.addEventListener('click', async (e) => {
   if (e.target.id === 'flowreset') { flowDraft = null; flowDirty = false; rerenderFlow(); return; }
 });
 function confirmLeave() { return window.confirm('Je hebt wijzigingen die nog niet zijn opgeslagen. Weggooien?'); }
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'rporg') { R.org = e.target.value; R.camps = null; render(); }
+  if (e.target.dataset?.rpc) { const id = e.target.dataset.rpc; R.camps.ids = e.target.checked ? [...R.camps.ids, id] : R.camps.ids.filter((x) => x !== id); render(); }
+});
 document.addEventListener('input', (e) => {
   if (e.target.id === 'chatq') { CH.q = e.target.value; $('#waitems').innerHTML = chatListHtml(chatGroups()); return; }
   if (!flowDraft) return;
