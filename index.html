@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="light dark">
+<title>Ops</title>
+<link rel="icon" type="image/png" href="logo-icon.png">
+<link rel="apple-touch-icon" href="logo-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF1F4; --surface:#FFFFFF; --sunk:#E4E9EE; --ink:#18212B; --mute:#5D6A78; --line:#D6DCE3;
+  --accent:#1E5A8A; --accent-ink:#FFFFFF; --ok:#1F7F55; --warn:#9A5B00; --bad:#B23A2A;
+  --ok-bg:#E2F2EA; --warn-bg:#FBEEDB; --bad-bg:#F8E3DF;
+  --chat:#E9E4DA; --b-out:#D7F2DF; --b-in:#FFFFFF; --b-ink:#16201A;
+  --r-s:6px; --r-m:10px; --r-l:16px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#12171D; --surface:#1A2129; --sunk:#222A33; --ink:#E5EAF0; --mute:#97A3B0; --line:#2C3540;
+  --accent:#7FB2E0; --accent-ink:#0E1A26; --ok:#5CC596; --warn:#E3A84D; --bad:#F08A78;
+  --ok-bg:#16302A; --warn-bg:#352812; --bad-bg:#3A1F1A;
+  --chat:#1C2228; --b-out:#24453A; --b-in:#2A323B; --b-ink:#E8EEF2;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 "Instrument Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.shell{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{border-right:1px solid var(--line);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+.brand{font-weight:700;font-size:17px;padding:0 10px 18px;letter-spacing:-.01em}
+.brand small{display:block;font-weight:500;color:var(--mute);font-size:13px}
+.nav{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-s);border:0;background:none;text-align:left;cursor:pointer;color:var(--mute);font-weight:500;width:100%}
+.nav:hover{background:var(--sunk);color:var(--ink)}
+.nav[aria-current=page]{background:var(--surface);color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+.nav .d{margin-left:auto;width:8px;height:8px;border-radius:50%}
+.d.ok{background:var(--ok)}.d.warn{background:var(--warn)}.d.bad{background:var(--bad)}.d.off{background:var(--line)}
+.side-foot{margin-top:auto;color:var(--mute);font-size:13px;padding:0 10px}
+.side-foot button{background:none;border:0;padding:0;color:var(--mute);text-decoration:underline;cursor:pointer}
+main{padding:28px 32px 80px;max-width:1180px;width:100%}
+h1{font-size:30px;line-height:1.15;letter-spacing:-.02em;margin:0 0 6px;font-weight:700}
+h2{font-size:17px;margin:0 0 12px;font-weight:600}
+.lede{color:var(--mute);margin:0 0 26px;max-width:62ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;margin-bottom:16px}
+.row{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0;padding-top:0}.row:last-child{padding-bottom:0}
+.row .k{width:150px;color:var(--mute);flex:none}
+.row .v{flex:1;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600}
+.pill.ok{background:var(--ok-bg);color:var(--ok)}.pill.warn{background:var(--warn-bg);color:var(--warn)}.pill.bad{background:var(--bad-bg);color:var(--bad)}.pill.off{background:var(--sunk);color:var(--mute)}
+.mute{color:var(--mute)} .small{font-size:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:9px 16px;border-radius:var(--r-m);cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--mute)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+.switch{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.bigtoggle{display:flex;align-items:center;gap:12px;border:0;border-radius:999px;padding:14px 26px 14px 18px;font-weight:700;font-size:16px;cursor:pointer}
+.bigtoggle.run{background:var(--ok-bg);color:var(--ok)} .bigtoggle.stop{background:var(--warn-bg);color:var(--warn)}
+.bigtoggle .knob{width:14px;height:14px;border-radius:50%;background:currentColor}
+.meter{height:8px;background:var(--sunk);border-radius:4px;overflow:hidden;margin-top:6px}.meter i{display:block;height:100%;background:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);vertical-align:top}th{color:var(--mute);font-weight:500;border-top:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto}
+pre.log{margin:0;font:12.5px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:380px;overflow:auto;background:var(--sunk);padding:12px 14px;border-radius:var(--r-m)}
+.qr{background:#fff;padding:10px;border-radius:var(--r-m);width:240px;max-width:100%}
+.code{font-size:30px;font-weight:700;letter-spacing:.14em}
+.alert{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}.alert:first-child{border-top:0}
+.alert .t{font-weight:600}.alert .b{color:var(--mute);font-size:14px;word-break:break-word}
+.alert .when{margin-left:auto;color:var(--mute);font-size:13px;white-space:nowrap;text-align:right}
+/* Flow */
+.flow{display:grid;grid-template-columns:220px 1fr 330px;gap:18px;align-items:start}
+.vlist{display:flex;flex-direction:column;gap:2px;position:sticky;top:20px}
+.vitem{border:0;background:none;text-align:left;padding:10px 12px;border-radius:var(--r-m);cursor:pointer}
+.vitem:hover{background:var(--sunk)}
+.vitem[aria-current=true]{background:var(--surface);box-shadow:0 0 0 1px var(--line)}
+.vitem .o{display:block;font-size:12.5px;color:var(--mute)}
+.vitem .warnmark{color:var(--warn);font-weight:700;margin-left:4px}
+.field{margin-bottom:18px}
+.field label{display:block;font-weight:600;margin-bottom:6px}
+.field .hint{color:var(--mute);font-size:13px;margin-top:4px}
+textarea,input[type=text],input[type=url],input[type=tel],input[type=email],input[type=password]{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:var(--r-m);padding:10px 12px;line-height:1.45}
+textarea{resize:vertical;min-height:84px}
+.q{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start;margin-bottom:10px}
+.q .num{width:28px;height:28px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-weight:600;font-size:13px;margin-top:6px}
+.q .tools{display:flex;flex-direction:column;gap:4px}
+.icon{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-s);width:30px;height:28px;cursor:pointer;line-height:1}
+.check{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.check input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent)}
+.warns{margin:0 0 18px;padding:0;list-style:none}
+.warns li{background:var(--warn-bg);color:var(--warn);padding:10px 14px;border-radius:var(--r-m);margin-bottom:8px;font-weight:500}
+.warns li button{margin-left:8px}
+.savebar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600;margin-bottom:10px}
+.phone{position:sticky;top:20px;background:var(--chat);border-radius:28px;padding:14px 12px 18px;border:8px solid var(--ink);min-height:520px}
+.phone .head{display:flex;align-items:center;gap:10px;padding:2px 6px 12px;border-bottom:1px solid rgba(0,0,0,.08);margin-bottom:12px}
+.phone .av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:13px}
+.bub{max-width:86%;padding:8px 11px;border-radius:12px;margin:0 0 8px;white-space:pre-wrap;word-break:break-word;font-size:14px;color:var(--b-ink);line-height:1.4}
+.bub.out{background:var(--b-out);margin-left:auto;border-bottom-right-radius:4px}
+.bub.in{background:var(--b-in);border-bottom-left-radius:4px;color:var(--mute);font-style:italic}
+.bub img{display:block;max-width:100%;border-radius:8px;margin-bottom:6px}
+.bub .lnk{color:var(--accent);text-decoration:underline}
+.endnote{text-align:center;font-size:12.5px;color:var(--mute);margin:12px 0 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.login form{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:28px;width:min(360px,100%);display:flex;flex-direction:column;gap:10px}
+.login h1{font-size:22px;margin-bottom:8px}
+svg text{fill:var(--mute);font-size:10px}
+/* Chats */
+.wa{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 150px);min-height:520px;border:1px solid var(--line);border-radius:var(--r-l);overflow:hidden;background:var(--surface)}
+.wa-list{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.wa-search{padding:10px;border-bottom:1px solid var(--line)}
+.wa-items{overflow-y:auto;flex:1}
+.wa-item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:none;padding:11px 14px;cursor:pointer}
+.wa-item:hover{background:var(--sunk)}
+.wa-item[aria-current=true]{background:var(--sunk)}
+.wa-item .top{display:flex;gap:8px;align-items:baseline}
+.wa-item .nm{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wa-item .tm{color:var(--mute);font-size:12.5px;flex:none}
+.wa-item .pv{color:var(--mute);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wa-item .tg{font-size:12px;color:var(--mute)}
+.wa-thread{display:flex;flex-direction:column;min-height:0;background:var(--chat)}
+.wa-head{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.wa-msgs{flex:1;overflow-y:auto;padding:16px 6%}
+.wa-day{text-align:center;margin:12px 0}.wa-day span{background:var(--surface);color:var(--mute);font-size:12.5px;padding:3px 10px;border-radius:8px}
+.wa-msgs .bub{max-width:70%}
+.wa-msgs .bub.in{font-style:normal;color:var(--b-ink)}
+.bub .meta{display:block;text-align:right;font-size:11.5px;color:var(--mute);margin-top:2px}
+.wa-empty{display:grid;place-items:center;height:100%;color:var(--mute)}
+.back{display:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px;background:var(--surface)}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:999px;cursor:pointer;color:var(--mute);font:inherit;font-size:13.5px}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.mk-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.mk-head h2{margin:0}
+main{min-width:0}.kpi{min-width:0}
+.kpi .dl{font-size:12.5px;margin-top:2px}
+.up{color:var(--ok)}.down{color:var(--bad)}
+.bars{display:block;margin-top:6px}.bars text{font-size:10px;fill:var(--mute)}
+.tip{position:relative;display:inline-grid;place-items:center;width:16px;height:16px;margin-left:5px;border-radius:50%;border:1px solid var(--line);color:var(--mute);font-size:11px;font-weight:700;line-height:1;cursor:help;vertical-align:1px;background:var(--surface)}
+.tip:hover,.tip:focus{color:var(--ink);border-color:var(--mute);outline:none}
+.tip .tt{display:none}
+#tipbox{position:fixed;z-index:50;max-width:280px;background:var(--ink);color:var(--paper);padding:8px 11px;border-radius:8px;font-size:13px;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.18);pointer-events:none;display:none}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);padding:14px 16px}.kpi .n{font-size:26px;font-weight:700;margin-top:4px}
+@media (max-width:700px){.kpis{grid-template-columns:1fr 1fr!important}}
+details.panel summary{cursor:pointer}details.panel ul{padding-left:20px}
+/* Garantie */
+.gtable td{cursor:pointer}.gtable tr:hover td{background:var(--sunk)}
+.archived-list{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+@media (max-width:1100px){.flow{grid-template-columns:1fr}.vlist{position:static;flex-direction:row;overflow-x:auto}.vitem{flex:none}.phone{position:static}}
+@media (max-width:760px){
+  .shell{grid-template-columns:1fr}
+  aside{position:sticky;top:0;height:auto;width:100%;flex-direction:row;padding:calc(6px + env(safe-area-inset-top)) 6px 6px;border-right:0;border-bottom:1px solid var(--line);background:var(--paper);z-index:20;overflow-x:auto}
+  .brand,.side-foot{display:none}
+  .nav{flex-direction:column;gap:2px;font-size:12px;padding:6px 8px;min-width:64px;align-items:center}
+  .nav .d{margin:0}
+  .nav[aria-current=page]{box-shadow:inset 0 -2px 0 var(--accent)}
+  .nav{flex:none;width:auto}
+  main{padding:20px 16px 90px}
+  h1{font-size:25px}
+  .grid2{grid-template-columns:1fr}
+  .wa{grid-template-columns:1fr;height:calc(100vh - 210px)}
+  .wa.open .wa-list{display:none} .wa:not(.open) .wa-thread{display:none}
+  .back{display:inline-block}
+  .wa-msgs .bub{max-width:86%}
+  .row{flex-wrap:wrap}.row .k{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <form id="loginform">
+    <h1>Ops</h1>
+    <input id="email" type="email" required autocomplete="username" placeholder="E-mailadres" aria-label="E-mailadres">
+    <input id="pw" type="password" required autocomplete="current-password" placeholder="Wachtwoord" aria-label="Wachtwoord">
+    <button class="btn pri" id="loginbtn">Inloggen</button>
+    <p class="mute small" id="loginmsg" role="status"></p>
+  </form>
+</div>
+<div id="app" class="shell" hidden>
+  <aside>
+    <div class="brand">Ops<small>ExclusiveLeads</small></div>
+    <nav id="nav" aria-label="Onderdelen" style="display:contents"></nav>
+    <div class="side-foot"><div id="upd"></div><button id="logout">Uitloggen</button></div>
+  </aside>
+  <main id="view"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
+const sb = createClient('https://inlqcnzjhmtahdzfqtvj.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlubHFjbnpqaG10YWhkemZxdHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDIzMTgsImV4cCI6MjA5MTc3ODMxOH0.hgF3hj346Py6SHy1rVM8UvACr0W-tvfNk-OxZzKeN0M');
+const VIEWS = [['home','Overzicht'],['chats','Chats'],['bot','Bot'],['flow','Gespreksflow'],['garantie','Garantie'],['arm','ARM-claimer'],['backup','Backups'],['alerts','Meldingen']];
+let view = (() => { try { return localStorage.getItem('opsView') || 'home'; } catch { return 'home'; } })();
+let D = { S: {}, arm: [], daily: [], alerts: [], settings: {}, vacs: [], orgs: {}, defaults: {} };
+let mkPeriod = (() => { try { return localStorage.getItem('mkPeriod') || 'last_7d'; } catch { return 'last_7d'; } })();
+let flowSel = null, flowDraft = null, flowDirty = false, showArchive = false;
+let CH = { msgs: [], convs: [], sel: null, q: '', loadedAt: 0 };
+let G = { logs: [], deals: [], sel: null, loaded: false };
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const ago = (iso) => { if (!iso) return 'nooit'; const s = (Date.now() - new Date(iso)) / 1000;
+  return s < 90 ? 'zojuist' : s < 5400 ? `${Math.round(s / 60)} min geleden` : s < 172800 ? `${Math.round(s / 3600)} uur geleden` : `${Math.round(s / 86400)} dagen geleden`; };
+const fresh = (iso, min = 5) => iso && (Date.now() - new Date(iso)) < min * 60000;
+const t = (iso) => new Date(iso).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const mb = (b) => Math.round(b / 1048576) + ' MB', gb = (b) => (b / 1073741824).toFixed(1) + ' GB';
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+const dur = (s) => { const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600); return d ? `${d} d ${h} u` : `${h} u ${Math.floor((s % 3600) / 60)} m`; };
+function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2400); }
+
+async function load() {
+  const [st, arm, daily, al, set] = await Promise.all([
+    sb.from('ops_status').select('*'),
+    sb.from('arm_claim_log').select('*').order('created_at', { ascending: false }).limit(50),
+    sb.from('arm_claim_daily').select('*').order('day', { ascending: false }).limit(30),
+    sb.from('ops_alerts').select('*').order('created_at', { ascending: false }).limit(200),
+    sb.from('ops_settings').select('*'),
+  ]);
+  if (st.error || !st.data.length) throw new Error('geen toegang');
+  D.S = Object.fromEntries(st.data.map((r) => [r.key, r]));
+  D.arm = arm.data || []; D.daily = (daily.data || []).reverse(); D.alerts = al.data || [];
+  D.settings = Object.fromEntries((set.data || []).map((r) => [r.key, r.value]));
+  $('#upd').textContent = 'Bijgewerkt ' + new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+}
+async function loadFlowData() {
+  const [v, o, d] = await Promise.all([
+    sb.from('vacancies').select('*').order('active', { ascending: false }).order('title'),
+    sb.from('organizations').select('id,name'),
+    sb.from('message_defaults').select('messages').eq('id', true).maybeSingle(),
+  ]);
+  D.vacs = v.data || []; D.orgs = Object.fromEntries((o.data || []).map((x) => [x.id, x.name])); D.defaults = d.data?.messages || {};
+}
+
+function health() {
+  const S = D.S, open = D.alerts.filter((a) => !a.resolved_at && a.type !== 'bot_paused');
+  const botOn = fresh(S.bot?.updated_at), paused = D.settings.bot_paused === true;
+  return {
+    server: fresh(S.server?.updated_at) ? 'ok' : 'bad',
+    bot: !botOn ? 'bad' : S.bot.data.wa_status !== 'connected' ? 'warn' : paused ? 'warn' : 'ok',
+    flow: D.vacs.length && D.vacs.some((v) => v.active && !v.archived_at && flowWarnings(v).length) ? 'warn' : 'off',
+    chats: 'off', garantie: 'off',
+    arm: S.arm?.data?.claimed ? 'ok' : S.arm?.data?.paused ? 'warn' : fresh(S.arm?.updated_at) ? 'ok' : 'bad',
+    backup: S.backup?.data?.ok && fresh(S.backup.updated_at, 26 * 60) ? 'ok' : 'bad',
+    alerts: open.some((a) => a.severity === 'critical') ? 'bad' : open.length ? 'warn' : 'ok',
+  };
+}
+
+function render() {
+  const h = health();
+  const openN = D.alerts.filter((a) => !a.resolved_at && a.type !== 'bot_paused').length;
+  $('#nav').innerHTML = VIEWS.map(([k, l]) => `<button class="nav" data-v="${k}" ${k === view ? 'aria-current="page"' : ''}>${l}${k === 'alerts' && openN ? ` (${openN})` : ''}${k === 'home' ? '' : `<span class="d ${h[k] || 'off'}"></span>`}</button>`).join('');
+  if (view === 'flow' && flowSel && document.querySelector('#flowform')) { renderFlowPreviewOnly(); return; }
+  if (view === 'chats' && document.querySelector('.wa')) { renderChatsInPlace(); return; }
+  $('#view').innerHTML = ({ home: vHome, chats: vChats, bot: vBot, flow: vFlow, garantie: vGarantie, arm: vArm, backup: vBackup, alerts: vAlerts })[view]();
+  if (view === 'bot') { const l = document.querySelector('pre.log'); if (l) l.scrollTop = l.scrollHeight; }
+}
+
+/* ── Overzicht ───────────────────────────────────────────── */
+function vHome() {
+  const S = D.S, paused = D.settings.bot_paused === true;
+  const open = D.alerts.filter((a) => !a.resolved_at && a.type !== 'bot_paused');
+  const crit = open.filter((a) => a.severity === 'critical');
+  const head = !fresh(S.server?.updated_at) ? 'De server reageert niet.'
+    : crit.length ? `${crit.length === 1 ? 'Eén ding vraagt' : crit.length + ' dingen vragen'} nu aandacht.`
+    : paused ? 'Alles draait. De bot staat op pauze.' : 'Alles draait.';
+  const sv = S.server?.data || {}, bot = S.bot?.data || {}, arm = S.arm?.data || {}, bk = S.backup?.data || {};
+  const wa = { connected: ['ok', 'Verbonden'], qr: ['bad', 'Uitgelogd, opnieuw koppelen'], reconnecting: ['warn', 'Maakt opnieuw verbinding'], connecting: ['warn', 'Verbinden'] }[bot.wa_status] || ['off', 'Onbekend'];
+  return `<h1>${head}</h1><p class="lede">Marketing, server, bot, ARM-claimer en backups op één plek. Ververst elke 30 seconden.</p>
+  ${vMarketing()}
+  <div class="panel">${toggleHtml()}</div>
+  <div class="panel">
+    <div class="row"><div class="k">Server${tip("De Oracle-server waar de bot, de claimer en de backups op draaien. Online = er kwam de afgelopen minuten een signaal binnen. Geheugen en schijf laten zien hoe vol hij zit.")}</div><div class="v">${fresh(S.server?.updated_at) ? `<span class="pill ok">Online</span> <span class="mute small">geheugen ${pct(sv.mem_total - sv.mem_available, sv.mem_total)}%, schijf ${pct(sv.disk_used, sv.disk_total)}%, uptime ${dur(sv.uptime_s || 0)}</span>` : `<span class="pill bad">Geen contact</span> <span class="mute small">laatste signaal ${ago(S.server?.updated_at)}</span>`}</div></div>
+    <div class="row"><div class="k">WhatsApp${tip("Of het botnummer gekoppeld is. Berichten vandaag = alles wat de bot vandaag verstuurde. Wachtrij = nieuwe leads die nog hun eerste bericht moeten krijgen, bijvoorbeeld omdat het daglimiet van het opbouwschema bereikt is of de bot op pauze staat.")}</div><div class="v"><span class="pill ${wa[0]}">${wa[1]}</span> <span class="mute small">${bot.sent_today ?? 0} berichten vandaag, ${bot.queue_te_benaderen ?? 0} in de wachtrij</span></div></div>
+    <div class="row"><div class="k">ARM-claimer${tip("Script dat elke 2 minuten probeert gratis extra servercapaciteit (ARM) bij Oracle te bemachtigen. Zoekt = nog niet gelukt, Oracle heeft meestal geen plek. Stopt vanzelf als het gelukt is.")}</div><div class="v">${arm.claimed ? '<span class="pill ok">Geclaimd</span>' : arm.paused ? '<span class="pill warn">Gepauzeerd</span>' : '<span class="pill ok">Zoekt</span>'} <span class="mute small">${arm.ocpu_claimed ?? 0} van ${arm.ocpu_target ?? 2} cores binnen, ${D.daily.at(-1)?.attempts ?? 0} pogingen vandaag</span></div></div>
+    <div class="row"><div class="k">Backup${tip("Elke nacht om 03:15 een kopie van de hele database op de server. Gelukt = de laatste nacht ging goed.")}</div><div class="v">${bk.ok ? '<span class="pill ok">Gelukt</span>' : '<span class="pill bad">Mislukt of ontbreekt</span>'} <span class="mute small">${ago(bk.finished_at || S.backup?.updated_at)}</span></div></div>
+  </div>
+  <div class="panel"><h2>Open meldingen${tip("Storingen die nog niet opgelost zijn. Ze sluiten vanzelf zodra het probleem weg is, of met de knop Sluiten.")}</h2>${open.length ? open.slice(0, 8).map(alertHtml).join('') : '<p class="mute" style="margin:0">Niks open.</p>'}</div>`;
+}
+function toggleHtml() {
+  const paused = D.settings.bot_paused === true;
+  return `<div class="switch">
+    <button class="bigtoggle ${paused ? 'stop' : 'run'}" data-act="togglebot" aria-pressed="${!paused}"><span class="knob"></span>${paused ? 'Bot staat op pauze' : 'Bot verstuurt berichten'}</button>
+    <div class="mute small" style="max-width:52ch">${paused ? 'Er gaat niks uit: geen eerste berichten, herinneringen of antwoorden. Nieuwe leads wachten. Klik om te hervatten.' : 'Nieuwe leads krijgen binnen het opbouwschema een bericht. Klik om alles stil te zetten.'}</div>
+  </div>`;
+}
+function alertHtml(a) {
+  const sev = a.severity === 'critical' ? 'bad' : a.severity === 'warn' ? 'warn' : 'off';
+  const body = esc(a.body || '').replace(/(https:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">openen</a>');
+  return `<div class="alert"><span class="d ${sev}" style="margin-top:8px;width:9px;height:9px;border-radius:50%;flex:none"></span><div><div class="t">${esc(a.title)}</div><div class="b">${body}</div></div>
+    <div class="when">${t(a.created_at)}${a.resolved_at ? `<br>opgelost` : `<br><button class="btn small" style="padding:3px 10px;margin-top:4px" data-close="${a.id}">Sluiten</button>`}</div></div>`;
+}
+
+const tip = (txt) => `<span class="tip" tabindex="0" role="note" aria-label="${esc(txt)}">?<span class="tt">${esc(txt)}</span></span>`;
+
+
+/* ── Marketing ───────────────────────────────────────────── */
+const eur = (n) => n == null ? '–' : '€' + Number(n).toLocaleString('nl-NL', { minimumFractionDigits: n < 100 ? 2 : 0, maximumFractionDigits: n < 100 ? 2 : 0 });
+const PREV = { today: 'yesterday', last_7d: 'prev_7d', last_30d: 'prev_30d' };
+const PLAB = { today: 'gisteren', last_7d: 'de 7 dagen daarvoor', last_30d: 'de 30 dagen daarvoor' };
+function delta(cur, prev, goodUp = true) {
+  if (cur == null || prev == null || prev === 0) return '<div class="dl mute">&nbsp;</div>';
+  const d = ((cur - prev) / prev) * 100; if (Math.abs(d) < 0.5) return `<div class="dl mute">gelijk aan ${PLAB[mkPeriod]}</div>`;
+  const good = d > 0 === goodUp;
+  return `<div class="dl ${goodUp === null ? 'mute' : good ? 'up' : 'down'}">${d > 0 ? '+' : ''}${Math.round(d)}% t.o.v. ${PLAB[mkPeriod]}</div>`;
+}
+function leadBars(daily) {
+  if (!daily?.length) return '';
+  const W = 640, H = 70, max = Math.max(1, ...daily.map((r) => r.leads)), bw = W / daily.length;
+  return `<svg class="bars" viewBox="0 0 ${W} ${H + 14}" width="100%" role="img" aria-label="Leads per dag, laatste 30 dagen">${daily.map((r, i) => { const h = (r.leads / max) * H;
+    return `<rect x="${i * bw + 2}" y="${H - h}" width="${Math.max(2, bw - 4)}" height="${Math.max(h, 1)}" rx="2" fill="var(--accent)"><title>${r.d.slice(8)}-${r.d.slice(5, 7)}: ${r.leads} leads, ${eur(r.spend)}</title></rect>${i % 5 === 0 ? `<text x="${i * bw + bw / 2}" y="${H + 12}" text-anchor="middle">${r.d.slice(8)}-${r.d.slice(5, 7)}</text>` : ''}`; }).join('')}</svg>`;
+}
+function trendChart(daily, key) {
+  // 7-daags voortschrijdend, zodat losse dagen met 1 lead de lijn niet laten springen
+  const rows = daily.map((r, i) => { const win = daily.slice(Math.max(0, i - 6), i + 1); const sum = (f) => win.reduce((a, x) => a + (x[f] || 0), 0);
+    const val = key === 'cpl' ? (sum('leads') ? sum('spend') / sum('leads') : null) : key === 'cpm' ? (sum('impressions') ? sum('spend') / sum('impressions') * 1000 : null) : (sum('impressions') ? sum('clicks') / sum('impressions') * 100 : null);
+    return { d: r.d, v: val }; }).slice(-30);
+  const vals = rows.map((r) => r.v).filter((x) => x != null); if (vals.length < 2) return '<p class="mute small">Te weinig data.</p>';
+  const W = 300, H = 90, P = 4, lo = Math.min(...vals) * 0.9, hi = Math.max(...vals) * 1.1 || 1, x = (i) => P + (i / (rows.length - 1)) * (W - 2 * P), y = (v) => H - P - ((v - lo) / (hi - lo || 1)) * (H - 2 * P);
+  const pts = rows.map((r, i) => (r.v == null ? null : `${x(i).toFixed(1)},${y(r.v).toFixed(1)}`)).filter(Boolean).join(' ');
+  const fmt = (v) => key === 'ctr' ? v.toLocaleString('nl-NL', { maximumFractionDigits: 2 }) + '%' : eur(v);
+  const last = rows.at(-1).v, first = rows.find((r) => r.v != null).v;
+  return `<svg viewBox="0 0 ${W} ${H + 14}" width="100%" role="img" aria-label="Verloop ${key}"><polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts}"/>${rows.map((r, i) => r.v == null ? '' : `<circle cx="${x(i)}" cy="${y(r.v)}" r="6" fill="transparent"><title>${r.d.slice(8)}-${r.d.slice(5, 7)}: ${fmt(r.v)}</title></circle>`).join('')}<text x="${P}" y="${H + 12}" font-size="10" fill="var(--mute)">${rows[0].d.slice(8)}-${rows[0].d.slice(5, 7)}</text><text x="${W - P}" y="${H + 12}" font-size="10" fill="var(--mute)" text-anchor="end">${rows.at(-1).d.slice(8)}-${rows.at(-1).d.slice(5, 7)}</text></svg>
+    <div class="small"><b>${last != null ? fmt(last) : '–'}</b> <span class="mute">nu, was ${fmt(first)} 30 dagen terug</span></div>`;
+}
+function vMarketing() {
+  const r = D.S.marketing; if (!r) return '';
+  const m = r.data, cur = m.totals[mkPeriod] || {}, prev = m.totals[PREV[mkPeriod]] || {};
+  const act = m.campaigns.filter((c) => c.status === 'ACTIVE');
+  const seg = [['today', 'Vandaag'], ['last_7d', '7 dagen'], ['last_30d', '30 dagen']].map(([k, l]) => `<button data-mk="${k}" aria-pressed="${k === mkPeriod}">${l}</button>`).join('');
+  const kpi = (lab, val, d, t) => `<div class="kpi"><div class="mute small">${lab}${tip(t)}</div><div class="n">${val}</div>${d}</div>`;
+  const camps = act.map((c) => { const p = c[mkPeriod] || {}, w = c.last_7d || {}; const avg = w.spend / 7;
+    const pace = c.pace_per_day_needed != null ? (avg < c.pace_per_day_needed * 0.8 ? ['warn', 'loopt achter'] : avg > c.pace_per_day_needed * 1.2 ? ['warn', 'loopt voor'] : ['ok', 'op schema']) : null;
+    return `<tr><td><b>${esc(c.name)}</b><div class="mute small">${c.adsets.length} advertentieset${c.adsets.length === 1 ? '' : 's'}${c.end ? `, stopt ${new Date(c.end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}` : ''}</div></td>
+      <td class="n">${eur(p.spend)}</td><td class="n">${p.leads ?? 0}</td><td class="n">${eur(p.cpl)}</td><td class="n">${p.ctr != null ? p.ctr.toLocaleString('nl-NL') + '%' : '–'}</td>
+      <td class="n ${w.frequency > 3 ? 'warn' : ''}">${w.frequency ? w.frequency.toLocaleString('nl-NL') : '–'}</td>
+      <td class="n">${eur(c.budget_remaining)}<div class="mute small">${c.days_left != null ? `${c.days_left} dagen` : ''}</div></td>
+      <td>${pace ? `<span class="pill ${pace[0]}">${pace[1]}</span><div class="mute small">nodig ${eur(c.pace_per_day_needed)}/dag, nu ${eur(avg)}</div>` : '<span class="mute small">geen einddatum</span>'}</td></tr>`; }).join('');
+  const fun = (m.funnel || []).map((f) => `<tr><td>${esc(f.vacancy)}</td><td class="n">${f.leads}</td><td class="n">${f.contacted}</td><td class="n">${f.replied}</td><td class="n">${f.done}</td><td class="n">${f.median_first_msg_min == null ? '–' : f.median_first_msg_min < 60 ? Math.round(f.median_first_msg_min) + ' min' : f.median_first_msg_min < 2880 ? Math.round(f.median_first_msg_min / 60) + ' uur' : Math.round(f.median_first_msg_min / 1440) + ' dagen'}</td></tr>`).join('');
+  return `<div class="panel"><div class="mk-head"><h2>Marketing${tip('Cijfers uit Facebook Ads, elk half uur opgehaald. Alleen lezen: er wordt niks aan je advertenties veranderd. Alleen jij ziet dit, klanten niet.')}</h2><div class="seg" role="group" aria-label="Periode">${seg}</div></div>
+    <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+      ${kpi('Uitgegeven', eur(cur.spend), delta(cur.spend, prev.spend, null), 'Advertentiekosten in deze periode, alle accounts samen.')}
+      ${kpi('Leads', cur.leads ?? 0, delta(cur.leads, prev.leads, true), 'Ingevulde leadformulieren volgens Facebook.')}
+      ${kpi('Kosten per lead', eur(cur.cpl), delta(cur.cpl, prev.cpl, false), 'Uitgegeven gedeeld door leads. Lager is beter.')}
+      ${kpi('CTR', cur.ctr != null ? cur.ctr.toLocaleString('nl-NL') + '%' : '–', delta(cur.ctr, prev.ctr, true), 'Percentage mensen dat op de advertentie klikt nadat ze hem zagen. Zakt dit, dan raakt de advertentie uitgekeken.')}
+    </div>
+    <div style="margin-top:14px"><div class="mute small">Leads per dag, laatste 30 dagen</div>${leadBars((m.daily || []).slice(-30))}</div>
+    <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
+      <div class="kpi"><div class="mute small">Kosten per lead${tip('Voortschrijdend gemiddelde over 7 dagen. Stijgt deze lijn, kijk dan naar CPM en CTR ernaast: stijgt de CPM, dan is het bereik duurder geworden; daalt de CTR, dan raakt de advertentie uitgekeken.')}</div>${trendChart(m.daily || [], 'cpl')}</div>
+      <div class="kpi"><div class="mute small">CPM${tip('Kosten per 1000 vertoningen, voortschrijdend over 7 dagen. Hoger = de doelgroep is duurder om te bereiken (concurrentie, seizoen, kleine doelgroep).')}</div>${trendChart(m.daily || [], 'cpm')}</div>
+      <div class="kpi"><div class="mute small">CTR${tip('Percentage dat op de advertentie klikt, voortschrijdend over 7 dagen. Daalt dit, dan werkt de advertentie minder goed en stijgen de kosten per lead.')}</div>${trendChart(m.daily || [], 'ctr')}</div>
+    </div>
+    ${act.length ? `<div class="scroll" style="margin-top:14px"><table><tr><th>Lopende campagne</th><th class="n">Uitgegeven</th><th class="n">Leads</th><th class="n">Per lead</th><th class="n">CTR</th><th class="n">Frequentie${tip('Hoe vaak dezelfde persoon je advertentie gemiddeld zag in de laatste 7 dagen. Boven de 3 raakt je doelgroep verzadigd en stijgen de kosten per lead meestal.')}</th><th class="n">Budget over${tip('Resterend budget van de advertentiesets die nog lopen, en hoeveel dagen tot de einddatum.')}</th><th>Tempo${tip('Of de campagne zijn budget op tijd opmaakt. Nodig = resterend budget gedeeld door resterende dagen. Nu = gemiddelde uitgave per dag van de laatste 7 dagen.')}</th></tr>${camps}</table></div>` : '<p class="mute">Geen lopende campagnes.</p>'}
+    ${fun ? `<div class="scroll" style="margin-top:14px"><h2 style="font-size:16px">Opvolging door de bot, laatste 30 dagen${tip('Wat er met de leads gebeurt nadat ze binnenkomen. Reageerde en de snelheid tellen vanaf 20 oktober, toen de bot alle berichten begon op te slaan.')}</h2><table><tr><th>Vacature</th><th class="n">Leads</th><th class="n">Benaderd</th><th class="n">Reageerde</th><th class="n">Afgerond</th><th class="n">Eerste bericht na${tip('Mediane tijd tussen binnenkomst van de lead en het eerste WhatsApp-bericht. Hoog zolang het opbouwschema het aantal nieuwe gesprekken per dag beperkt of de bot op pauze staat.')}</th></tr>${fun}</table></div>` : ''}
+    ${m.errors?.length ? `<p class="bad small">${esc(m.errors.join(' | '))}</p>` : ''}
+    <p class="mute small" style="margin:10px 0 0">Bijgewerkt ${ago(r.updated_at)}.</p></div>`;
+}
+
+/* ── Bot ─────────────────────────────────────────────────── */
+function vBot() {
+  const r = D.S.bot; if (!r) return '<h1>Bot</h1><p class="lede">Nog geen gegevens van de bot ontvangen.</p>';
+  const d = r.data, w = d.warmup || {}, on = fresh(r.updated_at);
+  const wa = { connected: ['ok', 'Verbonden'], qr: ['bad', 'Wacht op koppeling'], reconnecting: ['warn', 'Maakt opnieuw verbinding'], connecting: ['warn', 'Verbinden'] }[d.wa_status] || ['off', d.wa_status];
+  const link = d.wa_status === 'qr' ? `<div class="panel"><h2>WhatsApp koppelen</h2><div class="grid2">
+      <div>${d.pairing_code ? `<p>WhatsApp, Gekoppelde apparaten, Apparaat koppelen, <b>Koppelen met telefoonnummer</b>. Voer deze code in:</p><div class="code">${esc(d.pairing_code.slice(0, 4))}-${esc(d.pairing_code.slice(4))}</div>` : '<p class="mute">Geen koppelcode ingesteld. Scan de QR-code.</p>'}</div>
+      <div>${d.qr ? `<img class="qr" src="${d.qr}" alt="QR-code om WhatsApp te koppelen">` : ''}</div></div></div>` : '';
+  return `<h1>Bot</h1><p class="lede">De WhatsApp-bot op de server. ${on ? `Status ${ago(r.updated_at)}.` : `<b class="bad">Geen signaal sinds ${ago(r.updated_at)}.</b>`}</p>
+  <div class="panel">${toggleHtml()}</div>${link}
+  <div class="grid2">
+    <div class="panel"><h2>Verbinding</h2>
+      <div class="row"><div class="k">WhatsApp</div><div class="v"><span class="pill ${wa[0]}">${esc(wa[1])}</span></div></div>
+      <div class="row"><div class="k">Proces${tip("Of het botprogramma op de server draait, en sinds wanneer (laatste herstart).")}</div><div class="v">${on ? 'Draait' : 'Offline'} <span class="mute small">sinds ${ago(d.started_at)}</span></div></div>
+      <div class="row"><div class="k">Vandaag verstuurd${tip("Alle berichten van vandaag samen: eerste berichten, vragen, herinneringen en afsluiters.")}</div><div class="v">${d.sent_today ?? 0} berichten</div></div>
+      <div class="row"><div class="k">Wachtrij${tip("Leads die nog geen eerste bericht hebben gehad. Die gaan vanzelf de deur uit zodra het opbouwschema of de pauze het toelaat.")}</div><div class="v">${d.queue_te_benaderen ?? 0} leads nog te benaderen</div></div>
+    </div>
+    <div class="panel"><h2>Opbouwschema nieuw nummer${tip("Een nieuw WhatsApp-nummer dat meteen veel onbekenden berichten stuurt, wordt snel geblokkeerd. Daarom start de bot klein en mag hij elke week meer nieuwe gesprekken beginnen. Antwoorden op lopende gesprekken tellen niet mee.")}</h2>
+      <p style="margin:0">Dag ${w.day ?? '?'}: <b>${w.today ?? 0} van ${w.limit ?? '?'}</b> nieuwe gesprekken gebruikt.</p>
+      <div class="meter"><i style="width:${pct(w.today || 0, w.limit || 1)}%"></i></div>
+      <p class="mute small" style="margin:10px 0 0">Dag 1 tot 3: 5 per dag. Dag 4 tot 7: 10. Week 2: 20. Tot dag 28: 35. Daarna 50. Wat boven het maximum valt, gaat de volgende ochtend tussen 9 en 11 uur.</p>
+    </div>
+  </div>
+  <div class="panel scroll"><h2>Gesprekken per vacature, laatste 30 dagen</h2><table>
+    <tr><th>Vacature</th><th class="n">Totaal${tip("Alle leads die de afgelopen 30 dagen voor deze vacature binnenkwamen.")}</th><th class="n">Wacht${tip("Nog geen eerste bericht gehad, of het eerste bericht wordt nu verstuurd. Staat hier lang iets, dan zit het daglimiet vol of staat de bot op pauze.")}</th><th class="n">In gesprek${tip("Eerste bericht is verstuurd en de kandidaat zit midden in de vragen, of de bot wacht op zijn antwoord.")}</th><th class="n">Klaar${tip("Gesprek afgerond: alle vragen beantwoord, of na de herinneringen nooit gereageerd. In de tab Chats zie je per kandidaat welke van de twee.")}</th><th class="n">Niet gelukt${tip("Geen bericht kunnen sturen (bijvoorbeeld geen geldig of geen WhatsApp-nummer), of bewust overgeslagen, zoals de oude leads van voor de herstart.")}</th></tr>
+    ${(d.per_vacancy || []).map((v) => `<tr><td>${esc(v.title)}</td><td class="n">${v.totaal_30d}</td><td class="n">${v.te_benaderen}</td><td class="n">${v.in_gesprek}</td><td class="n">${v.klaar}</td><td class="n">${v.mislukt}</td></tr>`).join('')}</table></div>
+  <div class="panel"><h2>Laatste logregels <span class="mute small" style="font-weight:500">nieuwste onderaan</span></h2><pre class="log">${(d.log || []).filter((l) => !/^\s*(\{|\}|[a-zA-Z]+:|<Buffer)/.test(l.line)).map((l) => `<span class="${l.level === 'error' ? 'bad' : l.level === 'warn' ? 'warn' : ''}">${t(l.t)}  ${esc(l.line)}</span>`).join('\n') || 'Nog geen regels.'}</pre></div>`;
+}
+
+/* ── Gespreksflow ────────────────────────────────────────── */
+const SAMPLE = 'Sanne';
+const msgText = (v, key, legacyCol) => (v.messages && v.messages[key]) || (legacyCol && v[legacyCol]) || '';
+const fill = (s, v) => String(s || '').replaceAll('{{naam}}', SAMPLE).replaceAll('{{vacature}}', v.title || 'de vacature').replaceAll('{{link}}', cleanLink(v.booking_link) || '[link]');
+function cleanLink(u) { if (!u) return ''; try { const x = new URL(u); return x.origin + x.pathname; } catch { return u; } }
+function flowWarnings(v) {
+  const w = [], intro = v.intro_message || D.defaults.intro || '', qs = (v.questions || []).filter((q) => q.vraag?.trim());
+  if (!qs.length && !v.send_booking) w.push({ text: 'Na het eerste bericht stopt de bot: er zijn geen vragen en geen afspraaklink. Antwoordt de kandidaat, dan krijgt hij niks terug.' });
+  if (!qs.length && /vragen|vraag/i.test(intro)) w.push({ text: 'Het eerste bericht kondigt vragen aan, maar er zijn er geen ingesteld.' });
+  if (/https?:\/\//i.test(intro)) w.push({ text: 'Er staat een link in het eerste bericht. Links van een onbekend nummer verhogen de kans op een blokkade. Zet de link in het afsluitende bericht.' });
+  if (v.send_booking && !v.booking_link) w.push({ text: 'Afspraaklink staat aan, maar er is geen link ingevuld.' });
+  if (!v.handoff_phone) w.push({ text: 'Geen human support-nummer: verzoeken om contact komen bij jou binnen in plaats van bij de opdrachtgever.' });
+  if (v.booking_link && cleanLink(v.booking_link) !== v.booking_link) w.push({ text: 'De afspraaklink bevat extra parameters, bijvoorbeeld een vaste maand.', fix: 'cleanlink' });
+  return w;
+}
+function vFlow() {
+  if (!D.vacs.length) return '<h1>Gespreksflow</h1><p class="lede">Vacatures laden…</p>';
+  if (!flowSel || !D.vacs.find((v) => v.id === flowSel)) flowSel = (D.vacs.find((v) => v.active && !v.archived_at) || D.vacs[0]).id;
+  if (!flowDraft || flowDraft.id !== flowSel) { flowDraft = structuredClone(D.vacs.find((v) => v.id === flowSel)); flowDirty = false; }
+  const v = flowDraft, msgs = v.messages || {};
+  const vis = D.vacs.filter((x) => !x.archived_at), arch = D.vacs.filter((x) => x.archived_at);
+  const item = (x) => `<button class="vitem" data-vac="${x.id}" aria-current="${x.id === flowSel}">${esc(x.title)}${x.active && !x.archived_at && flowWarnings(x).length ? '<span class="warnmark" title="Heeft aandachtspunten">!</span>' : ''}<span class="o">${esc(D.orgs[x.organization_id] || '')}${x.archived_at ? ', gearchiveerd' : x.active ? '' : ', inactief'}</span></button>`;
+  const list = vis.map(item).join('') + (arch.length ? `<div class="archived-list"><button class="vitem" data-act="togglearchive"><span class="mute">${showArchive ? 'Archief verbergen' : `Archief (${arch.length})`}</span></button>${showArchive ? arch.map(item).join('') : ''}</div>` : '');
+  const warns = flowWarnings(v);
+  const qs = (v.questions || []).map((q, i) => `<div class="q"><div class="num">${i + 1}</div>
+    <textarea data-q="${i}" rows="2" aria-label="Vraag ${i + 1}">${esc(q.vraag)}</textarea>
+    <div class="tools"><button type="button" class="icon" data-qup="${i}" aria-label="Omhoog" ${i === 0 ? 'disabled' : ''}>↑</button><button type="button" class="icon" data-qdel="${i}" aria-label="Verwijderen">✕</button></div></div>`).join('');
+  return `<h1>Gespreksflow</h1><p class="lede">Wat de bot per vacature stuurt. Het voorbeeld laat het gesprek zien zoals de kandidaat het krijgt. Na opslaan geldt het direct voor nieuwe berichten.</p>
+  <div class="flow">
+    <div class="vlist" role="list">${list}</div>
+    <form id="flowform" class="panel" autocomplete="off">
+      <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap"><h2 style="flex:1">${esc(v.title)} <span class="mute small" style="font-weight:500">${esc(D.orgs[v.organization_id] || '')}</span></h2>
+        ${v.archived_at ? `<button type="button" class="btn" data-act="unarchive">Terugzetten uit archief</button>` : `<button type="button" class="btn" data-act="archive">Archiveren</button>`}</div>
+      ${v.archived_at ? `<p class="pill off" style="margin:0 0 14px">Gearchiveerd op ${t(v.archived_at)}. Deze campagne krijgt geen leads en de bot stuurt er niks voor.</p>` : ''}
+      ${warns.length ? `<ul class="warns">${warns.map((w) => `<li>${esc(w.text)}${w.fix ? ` <button type="button" class="btn small" data-fix="${w.fix}">Opschonen</button>` : ''}</li>`).join('')}</ul>` : ''}
+      <div class="field"><label for="f-intro">Eerste bericht</label>
+        <textarea id="f-intro" data-f="intro_message" rows="4" placeholder="${esc(D.defaults.intro || '')}">${esc(v.intro_message || '')}</textarea>
+        <div class="hint">Gaat samen met de eerste vraag in één bericht. Gebruik {{naam}} en {{vacature}}. Leeg = standaardtekst.</div></div>
+      <div class="field"><label>Vragen</label>${qs || '<p class="mute small" style="margin:0 0 10px">Nog geen vragen.</p>'}
+        <button type="button" class="btn" data-qadd="1">Vraag toevoegen</button>
+        <div class="hint">De bot stelt ze één voor één en wacht steeds op antwoord.</div></div>
+      <div class="field"><label for="f-hand">Human support (WhatsApp-nummer)${tip('Als een kandidaat gebeld wil worden of er met de bot niet uitkomt, appt de bot dit nummer met naam, telefoonnummer en bericht van de kandidaat. Vul het nummer in van de medewerker van de opdrachtgever.')}</label>
+        <input id="f-hand" type="tel" data-f="handoff_phone" value="${esc(v.handoff_phone || '')}" placeholder="06 12345678">
+        <div class="hint">Leeg = de verzoeken komen bij jou binnen als melding.</div></div>
+      <label class="check"><input type="checkbox" data-b="send_booking" ${v.send_booking ? 'checked' : ''}><span><b>Na de laatste vraag een afspraaklink sturen</b><br><span class="mute small">Bijvoorbeeld je Calendly voor een kennismakingsgesprek.</span></span></label>
+      ${v.send_booking ? `<div class="field"><label for="f-link">Afspraaklink</label><input id="f-link" type="url" data-f="booking_link" value="${esc(v.booking_link || '')}" placeholder="https://calendly.com/...">
+        </div>
+        <div class="field"><label for="f-inv">Bericht met de link</label><textarea id="f-inv" data-m="booking_invite" rows="4" placeholder="${esc(D.defaults.booking_invite || '')}">${esc(msgs.booking_invite || '')}</textarea><div class="hint">Gebruik {{link}} waar de link moet komen. Leeg = standaardtekst.</div></div>`
+      : `<div class="field"><label for="f-close">Afsluitend bericht</label><textarea id="f-close" data-f="closing_message" rows="3" placeholder="${esc(D.defaults.closing_generic || '')}">${esc(v.closing_message || '')}</textarea><div class="hint">Na de laatste vraag. Leeg = standaardtekst.</div></div>`}
+      <details><summary>Herinneringen als iemand niet antwoordt</summary>
+        <div class="field"><label for="f-r1">Herinnering (één keer, de volgende dag tussen 10 en 12 uur)</label><textarea id="f-r1" data-m="reminder_1" rows="2" placeholder="${esc(D.defaults.reminder_1 || '')}">${esc(msgs.reminder_1 || '')}</textarea></div>
+
+      </details>
+      <div class="savebar"><button type="submit" class="btn pri" id="flowsave" ${flowDirty ? '' : 'disabled'}>Wijzigingen opslaan</button><button type="button" class="btn" id="flowreset" ${flowDirty ? '' : 'disabled'}>Ongedaan maken</button><span class="mute small" id="flowstate">${flowDirty ? 'Niet opgeslagen wijzigingen' : 'Alles opgeslagen'}</span></div>
+    </form>
+    <div id="phone">${phoneHtml(v)}</div>
+  </div>`;
+}
+function phoneHtml(v) {
+  const qs = (v.questions || []).filter((q) => q.vraag?.trim());
+  const intro = fill(v.intro_message || D.defaults.intro || '', v);
+  const b = [];
+  const first = qs.length ? `${intro}\n\n${fill(qs[0].vraag, v)}` : intro;
+  b.push(`<div class="bub out">${v.image_url ? `<img src="${esc(v.image_url)}" alt="">` : ''}${esc(first)}</div>`);
+  if (!qs.length && !v.send_booking) return wrap(b.join('') + '<p class="endnote">Hier stopt de bot.</p>');
+  b.push('<div class="bub in">antwoord van de kandidaat</div>');
+  qs.slice(1).forEach((q) => { b.push(`<div class="bub out">${esc(fill(q.vraag, v))}</div>`); b.push('<div class="bub in">antwoord van de kandidaat</div>'); });
+  if (v.send_booking) {
+    const txt = fill((v.messages && v.messages.booking_invite) || D.defaults.booking_invite || '', v);
+    b.push(`<div class="bub out">${esc(txt).replace(esc(cleanLink(v.booking_link) || '[link]'), `<span class="lnk">${esc(cleanLink(v.booking_link) || '[link]')}</span>`)}</div>`);
+  } else b.push(`<div class="bub out">${esc(fill(v.closing_message || D.defaults.closing_generic || '', v))}</div>`);
+  return wrap(b.join('') + '<p class="endnote">Gesprek klaar, kandidaat staat op het bord.</p>');
+  function wrap(inner) { return `<div class="phone" aria-label="Voorbeeld van het gesprek"><div class="head"><div class="av">EL</div><div><b style="font-size:14px">Voorbeeld met ${SAMPLE}</b><div class="mute small">zo ziet de kandidaat het</div></div></div>${inner}</div>`; }
+}
+function renderFlowPreviewOnly() { const p = $('#phone'); if (p) p.innerHTML = phoneHtml(flowDraft); }
+function markDirty() { flowDirty = true; const s = $('#flowsave'), r = $('#flowreset'), st = $('#flowstate'); if (s) { s.disabled = false; r.disabled = false; st.textContent = 'Niet opgeslagen wijzigingen'; } renderFlowPreviewOnly(); }
+function rerenderFlow() { $('#view').innerHTML = vFlow(); }
+
+/* ── Chats ───────────────────────────────────────────────── */
+const normPhone = (p) => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2); if (d.startsWith('0')) d = '31' + d.slice(1); if (d.length === 9 && d.startsWith('6')) d = '31' + d; return d; };
+const STATE = { te_benaderen: ['off', 'Wacht'], bezig: ['off', 'Bezig'], in_gesprek: ['ok', 'In gesprek'], klaar: ['ok', 'Klaar'], geen_reactie: ['warn', 'Geen reactie'], mislukt: ['bad', 'Mislukt'], overgeslagen: ['off', 'Overgeslagen'] };
+async function loadChats() {
+  const since = new Date(Date.now() - 90 * 864e5).toISOString();
+  const [m, c] = await Promise.all([
+    sb.from('wa_messages').select('created_at,phone,direction,text,meta').gte('created_at', since).order('created_at', { ascending: false }).limit(3000),
+    sb.from('candidate_conversations').select('id,name,phone,state,vacancy_id,created_at').gte('created_at', since).order('created_at', { ascending: false }).limit(2000),
+  ]);
+  CH.msgs = (m.data || []).reverse(); CH.convs = c.data || []; CH.loadedAt = Date.now();
+}
+function chatGroups() {
+  const byPhone = new Map();
+  for (const x of CH.msgs) { const k = normPhone(x.phone); if (!byPhone.has(k)) byPhone.set(k, []); byPhone.get(k).push(x); }
+  const conv = new Map(); for (const c of CH.convs) { const k = normPhone(c.phone); if (!conv.has(k)) conv.set(k, c); }
+  const vt = Object.fromEntries(D.vacs.map((v) => [v.id, v.title]));
+  return [...byPhone.entries()].map(([phone, msgs]) => { const c = conv.get(phone); return { phone, msgs, last: msgs.at(-1), name: c?.name || '+' + phone, state: c?.state, vac: c ? vt[c.vacancy_id] : '' }; })
+    .sort((a, b) => (a.last.created_at < b.last.created_at ? 1 : -1));
+}
+const hm = (iso) => new Date(iso).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+const dayLabel = (iso) => { const d = new Date(iso), n = new Date(); const y = new Date(n); y.setDate(n.getDate() - 1);
+  return d.toDateString() === n.toDateString() ? 'Vandaag' : d.toDateString() === y.toDateString() ? 'Gisteren' : d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }); };
+const listTime = (iso) => { const d = new Date(iso); return d.toDateString() === new Date().toDateString() ? hm(iso) : d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }); };
+function chatListHtml(groups) {
+  const q = CH.q.toLowerCase();
+  const items = groups.filter((g) => !q || g.name.toLowerCase().includes(q) || g.phone.includes(q.replace(/\D/g, '') || '\u0000'));
+  if (!items.length) return '<p class="mute" style="padding:14px">Geen chats gevonden.</p>';
+  return items.map((g) => { const st = STATE[g.state] || ['off', ''];
+    return `<button class="wa-item" data-chat="${g.phone}" aria-current="${g.phone === CH.sel}"><div class="top"><span class="nm">${esc(g.name)}</span><span class="tm">${listTime(g.last.created_at)}</span></div>
+      <div class="pv">${g.last.direction === 'out' ? (g.last.meta?.manual ? 'Jij: ' : 'Bot: ') : ''}${esc((g.last.text || '').slice(0, 90))}</div>
+      <div class="tg">${esc(g.vac || '')}${st[1] ? `${g.vac ? ', ' : ''}${st[1].toLowerCase()}` : ''}</div></button>`; }).join('');
+}
+function threadHtml(g) {
+  if (!g) return '<div class="wa-empty">Kies links een chat.</div>';
+  let out = '', lastDay = '';
+  for (const m of g.msgs) {
+    const dl = dayLabel(m.created_at); if (dl !== lastDay) { out += `<div class="wa-day"><span>${dl}</span></div>`; lastDay = dl; }
+    const who = m.direction === 'out' ? (m.meta?.manual ? 'jij, ' : m.meta?.paused ? '' : 'bot, ') : (m.meta?.paused ? 'niet beantwoord (pauze), ' : '');
+    out += `<div class="bub ${m.direction === 'out' ? 'out' : 'in'}">${m.meta?.image ? `<img src="${esc(m.meta.image)}" alt="">` : ''}${esc(m.text)}<span class="meta">${who}${hm(m.created_at)}</span></div>`;
+  }
+  const st = STATE[g.state] || ['off', 'Geen gesprek in de database'];
+  return `<div class="wa-head"><button class="btn back" data-act="chatback" aria-label="Terug naar de lijst">Terug</button><div style="flex:1;min-width:0"><b>${esc(g.name)}</b><div class="mute small">+${esc(g.phone)}${g.vac ? `, ${esc(g.vac)}` : ''}</div></div><span class="pill ${st[0]}">${st[1]}</span></div>
+    <div class="wa-msgs" id="wamsgs">${out}</div>`;
+}
+function vChats() {
+  const groups = chatGroups();
+  return `<h1>Chats</h1><p class="lede">Alle WhatsApp-gesprekken van de bot, ook wat je zelf vanaf de telefoon stuurt. Ververst elke 10 seconden.</p>
+  <div class="wa ${CH.sel ? 'open' : ''}"><div class="wa-list"><div class="wa-search"><input type="text" id="chatq" placeholder="Zoek op naam of nummer" value="${esc(CH.q)}" aria-label="Zoek chats"></div><div class="wa-items" id="waitems">${chatListHtml(groups)}</div></div>
+  <div class="wa-thread" id="wathread">${threadHtml(groups.find((g) => g.phone === CH.sel))}</div></div>`;
+}
+function renderChatsInPlace() {
+  const groups = chatGroups(), box = $('#wamsgs');
+  const atBottom = !box || box.scrollHeight - box.scrollTop - box.clientHeight < 60, prevTop = box?.scrollTop;
+  $('#waitems').innerHTML = chatListHtml(groups);
+  $('#wathread').innerHTML = threadHtml(groups.find((g) => g.phone === CH.sel));
+  document.querySelector('.wa').classList.toggle('open', !!CH.sel);
+  const nb = $('#wamsgs'); if (nb) nb.scrollTop = atBottom ? nb.scrollHeight : prevTop;
+}
+
+/* ── Garantie ────────────────────────────────────────────── */
+const RULES = [
+  ['gebeld', 'Niet gebeld binnen 24 uur', 'De klant moet elke kandidaat binnen 24 uur na binnenkomst bellen. Gemeten aan het eerste belbewijs op de kaart.'],
+  ['feedback', 'Geen feedback binnen 24 uur na bellen', 'Na elk belmoment moet er binnen 24 uur een geschreven comment op de kaart staan, ook als het alleen "geen gehoor" is. Elk belmoment telt apart: kaart naar 1x/2x/3x gebeld, voicemail, onbereikbaar of een uitkomst zoals Geen fit.'],
+]
+const gdur = (h) => (h >= 48 ? `${Math.round(h / 24)} dagen` : `${h} uur`);
+async function loadGarantie() {
+  const [a, d] = await Promise.all([
+    sb.from('ops_status').select('data,updated_at').eq('key', 'garantie').maybeSingle(),
+    sb.from('leads').select('name,progress,status,created_at').is('organization_id', null).limit(1000),
+  ]);
+  G.data = a.data?.data || null; G.deals = (d.data || []).filter((x) => x.progress && (x.progress.garantie_verbroken || x.progress.refund_verwerkt || x.progress['3_kandidaten_geleverd'])); G.loaded = true;
+}
+function vGarantie() {
+  if (!G.loaded) return '<h1>Garantie</h1><p class="lede">Laden…</p>';
+  if (!G.data) return '<h1>Garantie</h1><p class="lede">Nog geen berekening van de server binnen.</p>';
+  const orgs = Object.entries(G.data.orgs).filter(([, o]) => !/demo|test/i.test(o.name));
+  const how = `<details class="panel"><summary><b>Hoe wordt dit gemeten?</b></summary>
+    <p>Elke 30 minuten leest de server alle Trello-kaarten van de klant (alleen lezen) en de acties in het klantenportaal. Acties van ExclusiveLeads zelf tellen niet mee. Dubbele kaarten van dezelfde kandidaat worden samengevoegd.</p>
+    <ul>${RULES.map((r) => `<li><b>${r[1]}:</b> ${r[2]}</li>`).join('')}</ul>
+    <p class="mute small">Belbewijs = kaart naar een bel-, voicemail-, onbereikbaar- of uitkomstlijst (kennismaking, geen fit, hiring, aangenomen), of een comment over bellen ("gebeld", "geen gehoor", "voicemail"). Noemt het comment een eerdere datum ("op 10 juli gebeld"), dan telt die dag als belmoment. Laatst berekend ${t(G.data.computed_at)}.</p></details>`;
+  if (G.sel) {
+    const o = G.data.orgs[G.sel]; const vs = o.violations;
+    const rows = vs.map((v) => { const r = RULES.find((x) => x[0] === v.rule);
+      return `<tr><td>${esc(v.lead)}${v.dups > 1 ? ` <span class="mute small">(${v.dups} kaarten)</span>` : ''}</td><td>${esc(r ? r[1] : v.rule)}${v.step ? `<div class="mute small">na "${esc(v.step)}"</div>` : ''}</td><td class="mute small">${t(v.rule === 'feedback' ? v.called : v.created)}</td><td>${v.done ? `${t(v.done)}<div class="mute small">${gdur(v.hours)} na ${v.rule === 'feedback' ? 'bellen' : 'binnenkomst'}</div>` : `<span class="pill bad">Nog niet</span><div class="mute small">al ${gdur(v.hours)}</div>`}</td><td class="mute small">${esc(v.list || '')}</td><td>${v.url ? `<a href="${esc(v.url)}" target="_blank" rel="noopener">kaart</a>` : ''}</td></tr>`; }).join('');
+    const cnt = Object.fromEntries(RULES.map((r) => [r[0], vs.filter((v) => v.rule === r[0]).length]));
+    const leadsBad = new Set(vs.map((v) => v.lead)).size;
+    return `<button class="btn" data-act="gback">Alle klanten</button><h1 style="margin-top:16px">${esc(o.name)}</h1>
+      <p class="lede">${vs.length ? `${leadsBad} van de ${o.cards} kandidaten hebben een overtreding (${vs.length} in totaal).` : `Geen overtredingen bij ${o.cards} kandidaten. De garantie staat.`} Bron: ${esc(o.source.join(', ') || 'geen')}.</p>
+      <div class="kpis" style="margin-bottom:16px;grid-template-columns:repeat(2,1fr)">${RULES.map((r) => `<div class="kpi"><div class="mute small">${esc(r[1])}${tip(r[2])}</div><div class="n">${cnt[r[0]]}</div></div>`).join('')}</div>
+      <div class="panel scroll"><table><tr><th>Kandidaat</th><th>Overtreding</th><th>Binnen / gebeld</th><th>Gedaan op</th><th>Lijst nu</th><th></th></tr>${rows || '<tr><td colspan="6" class="mute">Niks.</td></tr>'}</table></div>${how}`;
+  }
+  const rows = orgs.map(([id, o]) => { const c = Object.fromEntries(RULES.map((r) => [r[0], o.violations.filter((v) => v.rule === r[0]).length]));
+    const bad = new Set(o.violations.map((v) => v.lead)).size;
+    return `<tr data-gorg="${id}"><td><b>${esc(o.name)}</b><div class="mute small">${bad} van ${o.cards} kandidaten met overtreding, ${esc(o.source.join(', '))}</div></td><td>${o.violations.length ? '<span class="pill bad">Vervallen</span>' : '<span class="pill ok">Staat</span>'}</td>${RULES.map((r) => `<td class="n">${c[r[0]] || ''}</td>`).join('')}<td class="mute small">${o.violations[0] ? t(o.violations[0].created) : ''}</td></tr>`; }).join('');
+  return `<h1>Garantie</h1><p class="lede">Per klant of de garantie nog staat. Klik op een klant voor alle overtredingen. Hierover krijg je geen meldingen of mails.</p>
+  <div class="panel scroll"><table class="gtable"><tr><th>Klant</th><th>Status</th>${RULES.map((r) => `<th class="n">${esc(r[1])}${tip(r[2])}</th>`).join('')}<th>Laatste</th></tr>${rows}</table></div>${how}
+  ${G.deals.length ? `<div class="panel"><h2>Uit de delivery-kanban</h2>${G.deals.map((d) => `<div class="row"><div class="k">${esc(d.name)}</div><div class="v">${d.progress.garantie_verbroken ? '<span class="pill bad">Garantieafspraak verbroken</span> ' : ''}${d.progress.refund_verwerkt ? '<span class="pill warn">Refund verwerkt</span> ' : ''}${d.progress['3_kandidaten_geleverd'] ? '<span class="pill ok">3 kandidaten geleverd</span>' : ''}</div></div>`).join('')}</div>` : ''}`;
+}
+
+/* ── ARM / Backups / Meldingen ───────────────────────────── */
+function chart(rows) {
+  if (!rows.length) return '<p class="mute">Nog geen pogingen gelogd.</p>';
+  const W = 640, H = 140, max = Math.max(...rows.map((r) => r.attempts)), bw = W / rows.length;
+  return `<svg viewBox="0 0 ${W} ${H + 18}" width="100%" role="img" aria-label="Pogingen per dag">${rows.map((r, i) => { const h = max ? (r.attempts / max) * H : 0;
+    return `<rect x="${i * bw + 3}" y="${H - h}" width="${Math.max(2, bw - 6)}" height="${h}" rx="3" fill="${r.successes ? 'var(--ok)' : 'var(--accent)'}"><title>${r.day}: ${r.attempts} pogingen</title></rect>${rows.length <= 14 || i % 3 === 0 ? `<text x="${i * bw + bw / 2}" y="${H + 13}" text-anchor="middle">${r.day.slice(8)}-${r.day.slice(5, 7)}</text>` : ''}`; }).join('')}</svg>`;
+}
+function vArm() {
+  const d = D.S.arm?.data || {};
+  const res = { capacity: ['off', 'Geen plek'], success: ['ok', 'Gelukt'], limit: ['warn', 'Te vaak'], error: ['bad', 'Fout'], skipped: ['off', 'Overgeslagen'] };
+  return `<h1>ARM-claimer</h1><p class="lede">Probeert gratis ARM-capaciteit bij Oracle te pakken: om de beurt 2 cores met 12 GB en 1 core met 6 GB. Stopt vanzelf zodra je volle tegoed van 2 cores binnen is.</p>
+  <div class="panel"><div class="switch"><button class="bigtoggle ${d.paused ? 'stop' : 'run'}" data-act="togglearm"><span class="knob"></span>${d.paused ? 'Claimer staat op pauze' : 'Claimer zoekt'}</button>
+    <div class="mute small">${d.ocpu_claimed ?? 0} van ${d.ocpu_target ?? 2} cores binnen. Pauzeren of hervatten wordt binnen een minuut opgepakt.</div></div></div>
+  <div class="panel"><h2>Pogingen per dag${tip("Hoe vaak de claimer per dag bij Oracle aanklopte. Bij Te vaak wacht hij 15 minuten voordat hij het opnieuw probeert.")}</h2>${chart(D.daily)}</div>
+  <div class="panel scroll"><h2>Laatste 50 pogingen</h2><table><tr><th>Tijd</th><th>Vorm</th><th>Resultaat${tip("Geen plek = Oracle heeft nu geen capaciteit (normaal). Te vaak = Oracle wil even rust. Fout = iets anders ging mis.")}</th><th>Reden van Oracle</th></tr>
+    ${D.arm.map((a) => `<tr><td>${t(a.created_at)}</td><td>${a.ocpus} core${a.ocpus > 1 ? 's' : ''}, ${a.memory_gb} GB</td><td><span class="pill ${(res[a.result] || ['off'])[0]}">${(res[a.result] || ['', a.result])[1]}</span></td><td class="mute">${esc(a.message)}</td></tr>`).join('')}</table></div>`;
+}
+function vBackup() {
+  const r = D.S.backup; if (!r) return '<h1>Backups</h1><p class="lede">Nog geen backup gemeld. De eerste komt na de nachtelijke run om 03:15.</p>';
+  const d = r.data;
+  return `<h1>Backups</h1><p class="lede">Elke nacht om 03:15 een kopie van de hele Supabase-database op de server. De laatste 14 dagen blijven bewaard.</p>
+  <div class="panel">
+    <div class="row"><div class="k">Laatste backup</div><div class="v"><span class="pill ${d.ok ? 'ok' : 'bad'}">${d.ok ? 'Gelukt' : 'Mislukt'}</span> <span class="mute small">${ago(d.finished_at || r.updated_at)}</span></div></div>
+    <div class="row"><div class="k">Bestand</div><div class="v">${esc(d.file)} <span class="mute small">${d.size_bytes ? Math.round(d.size_bytes / 1024) + ' KB' : ''}</span></div></div>
+    <div class="row"><div class="k">Bewaard${tip("Aantal nachtelijke backups dat nog op de server staat. Ouder dan 14 dagen wordt automatisch opgeruimd.")}</div><div class="v">${d.kept ?? '?'} backups</div></div>
+    ${d.error ? `<div class="row"><div class="k">Fout</div><div class="v bad">${esc(d.error)}</div></div>` : ''}
+  </div>
+  <div class="panel"><h2>Rijen per tabel${tip("Hoeveel regels er per databasetabel in de laatste backup zitten. Handig om te zien of er ineens iets mist.")}</h2><table>${Object.entries(d.tables || {}).map(([k, v]) => `<tr><td>${esc(k)}</td><td class="n ${v < 0 ? 'bad' : ''}">${v < 0 ? 'fout' : v}</td></tr>`).join('')}</table></div>`;
+}
+function vAlerts() {
+  const open = D.alerts.filter((a) => !a.resolved_at), done = D.alerts.filter((a) => a.resolved_at);
+  return `<h1>Meldingen</h1><p class="lede">Elke 10 minuten gecontroleerd, ook als de server plat ligt. Storingen van server, bot en WhatsApp komen per mail. De rest (zoals een mislukte backup of een dag zonder leads) stuurt de bot naar je zakelijke WhatsApp.</p>
+  <div class="panel"><h2>Open</h2>${open.length ? open.map(alertHtml).join('') : '<p class="mute" style="margin:0">Niks open.</p>'}</div>
+  <div class="panel"><h2>Opgelost</h2>${done.length ? done.slice(0, 60).map(alertHtml).join('') : '<p class="mute" style="margin:0">Nog niks.</p>'}</div>`;
+}
+
+
+/* ── Tooltips ─────────────────────────────────────────────── */
+const tipbox = document.createElement('div'); tipbox.id = 'tipbox'; tipbox.setAttribute('role', 'tooltip'); document.body.appendChild(tipbox);
+function showTip(el) {
+  tipbox.textContent = el.querySelector('.tt')?.textContent || ''; tipbox.style.display = 'block';
+  const r = el.getBoundingClientRect(), w = tipbox.offsetWidth, h = tipbox.offsetHeight;
+  let x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  let y = r.top - h - 8; if (y < 8) y = r.bottom + 8;
+  tipbox.style.left = x + 'px'; tipbox.style.top = y + 'px';
+}
+const hideTip = () => { tipbox.style.display = 'none'; };
+document.addEventListener('mouseover', (e) => { const el = e.target.closest('.tip'); el ? showTip(el) : hideTip(); });
+document.addEventListener('focusin', (e) => { const el = e.target.closest('.tip'); if (el) showTip(el); });
+document.addEventListener('focusout', hideTip);
+addEventListener('scroll', hideTip, true);
+
+/* ── Events ──────────────────────────────────────────────── */
+document.addEventListener('click', async (e) => {
+  const nv = e.target.closest('[data-v]');
+  if (nv) { if (flowDirty && view === 'flow' && !confirmLeave()) return; view = nv.dataset.v; try { localStorage.setItem('opsView', view); } catch {}
+    if (view === 'flow' && !D.vacs.length) await loadFlowData();
+    if (view === 'chats') { $('#view').innerHTML = '<h1>Chats</h1><p class="lede">Laden…</p>'; await loadChats(); $('#view').innerHTML = vChats(); const b = $('#wamsgs'); if (b) b.scrollTop = b.scrollHeight; render(); window.scrollTo(0, 0); return; }
+    if (view === 'garantie') { G.sel = null; if (!G.loaded) { $('#view').innerHTML = vGarantie(); await loadGarantie(); } }
+    $('#view').innerHTML = ''; render(); window.scrollTo(0, 0); return; }
+  const ch = e.target.closest('[data-chat]');
+  if (ch) { CH.sel = ch.dataset.chat; renderChatsInPlace(); const b = $('#wamsgs'); if (b) b.scrollTop = b.scrollHeight; return; }
+  const go = e.target.closest('[data-gorg]');
+  if (go) { G.sel = go.dataset.gorg; $('#view').innerHTML = vGarantie(); window.scrollTo(0, 0); return; }
+  const mk = e.target.closest('[data-mk]');
+  if (mk) { mkPeriod = mk.dataset.mk; try { localStorage.setItem('mkPeriod', mkPeriod); } catch {} render(); return; }
+  const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'chatback') { CH.sel = null; renderChatsInPlace(); return; }
+  if (act === 'gback') { G.sel = null; $('#view').innerHTML = vGarantie(); return; }
+  if (act === 'togglearchive') { showArchive = !showArchive; rerenderFlow(); return; }
+  if (act === 'archive' || act === 'unarchive') {
+    if (flowDirty && !confirmLeave()) return;
+    const arch = act === 'archive';
+    if (arch && !window.confirm(`"${flowDraft.title}" archiveren? De campagne krijgt dan geen leads meer en de bot stuurt er niks meer voor. Je kunt hem later terugzetten.`)) return;
+    const { data, error } = await sb.from('vacancies').update({ archived_at: arch ? new Date().toISOString() : null, active: !arch, updated_at: new Date().toISOString() }).eq('id', flowDraft.id).select().single();
+    if (error) return toast('Niet gelukt: ' + error.message);
+    D.vacs = D.vacs.map((x) => (x.id === data.id ? data : x)); flowDraft = null; flowDirty = false; if (arch) showArchive = false;
+    toast(arch ? 'Gearchiveerd' : 'Teruggezet en actief'); rerenderFlow(); return;
+  }
+  if (act === 'togglebot' || act === 'togglearm') {
+    const key = act === 'togglebot' ? 'bot_paused' : 'arm_paused';
+    const cur = key === 'bot_paused' ? D.settings.bot_paused === true : !!D.S.arm?.data?.paused;
+    const { error } = await sb.from('ops_settings').update({ value: !cur, updated_at: new Date().toISOString() }).eq('key', key);
+    if (error) return toast('Niet gelukt: ' + error.message);
+    D.settings[key] = !cur; if (key === 'arm_paused' && D.S.arm) D.S.arm.data.paused = !cur;
+    toast(key === 'bot_paused' ? (!cur ? 'Bot gepauzeerd' : 'Bot hervat') : (!cur ? 'Claimer gepauzeerd' : 'Claimer hervat'));
+    render(); return;
+  }
+  const c = e.target.closest('[data-close]');
+  if (c) { await sb.from('ops_alerts').update({ resolved_at: new Date().toISOString() }).eq('id', c.dataset.close); await load(); render(); return; }
+  const vac = e.target.closest('[data-vac]');
+  if (vac) { if (flowDirty && !confirmLeave()) return; flowSel = vac.dataset.vac; flowDraft = null; rerenderFlow(); return; }
+  if (e.target.closest('[data-qadd]')) { flowDraft.questions = [...(flowDraft.questions || []), { key: 'vraag' + ((flowDraft.questions || []).length + 1), vraag: '' }]; flowDirty = true; rerenderFlow(); $(`[data-q="${flowDraft.questions.length - 1}"]`)?.focus(); return; }
+  const qd = e.target.closest('[data-qdel]');
+  if (qd) { flowDraft.questions.splice(+qd.dataset.qdel, 1); flowDirty = true; rerenderFlow(); return; }
+  const qu = e.target.closest('[data-qup]');
+  if (qu) { const i = +qu.dataset.qup, q = flowDraft.questions; [q[i - 1], q[i]] = [q[i], q[i - 1]]; flowDirty = true; rerenderFlow(); return; }
+  const fx = e.target.closest('[data-fix]');
+  if (fx && fx.dataset.fix === 'cleanlink') { flowDraft.booking_link = cleanLink(flowDraft.booking_link); flowDirty = true; rerenderFlow(); return; }
+  if (e.target.id === 'flowreset') { flowDraft = null; flowDirty = false; rerenderFlow(); return; }
+});
+function confirmLeave() { return window.confirm('Je hebt wijzigingen die nog niet zijn opgeslagen. Weggooien?'); }
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'chatq') { CH.q = e.target.value; $('#waitems').innerHTML = chatListHtml(chatGroups()); return; }
+  if (!flowDraft) return;
+  const el = e.target;
+  if (el.dataset.f) { flowDraft[el.dataset.f] = el.value; markDirty(); }
+  else if (el.dataset.m) { flowDraft.messages = { ...(flowDraft.messages || {}), [el.dataset.m]: el.value }; markDirty(); }
+  else if (el.dataset.q !== undefined) { flowDraft.questions[+el.dataset.q].vraag = el.value; markDirty(); }
+});
+document.addEventListener('change', (e) => {
+  if (!flowDraft || !e.target.dataset.b) return;
+  flowDraft[e.target.dataset.b] = e.target.checked; flowDirty = true; rerenderFlow();
+});
+document.addEventListener('submit', async (e) => {
+  if (e.target.id === 'loginform') return;
+  if (e.target.id !== 'flowform') return;
+  e.preventDefault();
+  const v = flowDraft;
+  const msgs = Object.fromEntries(Object.entries(v.messages || {}).filter(([, val]) => String(val || '').trim()));
+  const patch = {
+    intro_message: (v.intro_message || '').trim() || null,
+    questions: (v.questions || []).filter((q) => q.vraag?.trim()).map((q, i) => ({ key: q.key || 'vraag' + (i + 1), vraag: q.vraag.trim() })),
+    dynamic_conversation: false, send_booking: !!v.send_booking,
+    handoff_phone: (v.handoff_phone || '').replace(/[^\d+]/g, '') || null,
+    booking_link: (v.booking_link || '').trim() || null, closing_message: (v.closing_message || '').trim() || null,
+    messages: msgs, updated_at: new Date().toISOString(),
+  };
+  $('#flowsave').disabled = true;
+  const { data, error } = await sb.from('vacancies').update(patch).eq('id', v.id).select().single();
+  if (error) { toast('Opslaan mislukt: ' + error.message); $('#flowsave').disabled = false; return; }
+  D.vacs = D.vacs.map((x) => (x.id === v.id ? data : x)); flowDraft = structuredClone(data); flowDirty = false;
+  toast('Opgeslagen'); rerenderFlow(); render();
+});
+window.addEventListener('beforeunload', (e) => { if (flowDirty) { e.preventDefault(); e.returnValue = ''; } });
+
+$('#loginform').onsubmit = async (e) => {
+  e.preventDefault(); $('#loginbtn').disabled = true; $('#loginmsg').textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#pw').value });
+  if (error) { $('#loginmsg').textContent = 'Inloggen mislukt.'; $('#loginbtn').disabled = false; return; }
+  $('#login').hidden = true; start();
+};
+$('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+async function start() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { $('#login').hidden = false; return; }
+  try {
+    await Promise.all([load(), loadFlowData()]);
+    $('#app').hidden = false; render();
+    setInterval(async () => { try { await load(); if (!(view === 'flow' && flowDirty)) render(); } catch {} }, 30000);
+    setInterval(async () => { if (view !== 'chats' || document.hidden) return; try { await loadChats(); renderChatsInPlace(); } catch {} }, 10000);
+    if (view === 'chats') { await loadChats(); $('#view').innerHTML = vChats(); const b = $('#wamsgs'); if (b) b.scrollTop = b.scrollHeight; }
+    if (view === 'garantie') { await loadGarantie(); render(); }
+  } catch { $('#login').hidden = false; $('#loginmsg').textContent = 'Geen toegang.'; await sb.auth.signOut(); }
+}
+start();
+</script>
+</body>
+</html>
