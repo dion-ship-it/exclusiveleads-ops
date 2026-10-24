@@ -208,7 +208,7 @@ details.panel summary{cursor:pointer}details.panel ul{padding-left:20px}
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 const sb = createClient('https://inlqcnzjhmtahdzfqtvj.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlubHFjbnpqaG10YWhkemZxdHZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyMDIzMTgsImV4cCI6MjA5MTc3ODMxOH0.hgF3hj346Py6SHy1rVM8UvACr0W-tvfNk-OxZzKeN0M');
-const VIEWS = [['home','Overzicht'],['chats','Chats'],['bot','Bot'],['flow','Gespreksflow'],['garantie','Garantie'],['rapport','Klantrapport'],['arm','ARM-claimer'],['backup','Backups'],['alerts','Meldingen']];
+const VIEWS = [['home','Overzicht'],['chats','Chats'],['bot','Bot'],['flow','Gespreksflow'],['garantie','Garantie'],['arm','ARM-claimer'],['backup','Backups'],['alerts','Meldingen']];
 let view = (() => { try { return localStorage.getItem('opsView') || 'home'; } catch { return 'home'; } })();
 let D = { S: {}, arm: [], daily: [], alerts: [], settings: {}, vacs: [], orgs: {}, defaults: {} };
 let R = { org: null, camps: null, period: 'last_30d' };
@@ -355,7 +355,7 @@ function vMarketing() {
       <td class="n">${eur(c.budget_remaining)}<div class="mute small">${c.days_left != null ? `${c.days_left} dagen` : ''}</div></td>
       <td>${pace ? `<span class="pill ${pace[0]}">${pace[1]}</span><div class="mute small">nodig ${eur(c.pace_per_day_needed)}/dag, nu ${eur(avg)}</div>` : '<span class="mute small">geen einddatum</span>'}</td></tr>`; }).join('');
   const fun = (m.funnel || []).map((f) => `<tr><td>${esc(f.vacancy)}</td><td class="n">${f.leads}</td><td class="n">${f.contacted}</td><td class="n">${f.replied}</td><td class="n">${f.done}</td><td class="n">${f.median_first_msg_min == null ? '–' : f.median_first_msg_min < 60 ? Math.round(f.median_first_msg_min) + ' min' : f.median_first_msg_min < 2880 ? Math.round(f.median_first_msg_min / 60) + ' uur' : Math.round(f.median_first_msg_min / 1440) + ' dagen'}</td></tr>`).join('');
-  return `<div class="panel"><div class="mk-head"><h2>Marketing${tip('Cijfers uit Facebook Ads, elk half uur opgehaald. Alleen lezen: er wordt niks aan je advertenties veranderd. Alleen jij ziet dit, klanten niet.')}</h2><div class="seg" role="group" aria-label="Periode">${seg}</div></div>
+  return `<div class="panel"><div class="mk-head"><h2>Marketing${tip('Cijfers uit Facebook Ads, elk half uur opgehaald. Alleen lezen: er wordt niks aan je advertenties veranderd. Alleen jij ziet dit, klanten niet.')}</h2><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><div class="seg" role="group" aria-label="Periode">${seg}</div><button class="btn" data-act="openrapport">Klantrapport</button></div></div>
     <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
       ${kpi('Uitgegeven', eur(cur.spend), delta(cur.spend, prev.spend, null), 'Advertentiekosten in deze periode, alle accounts samen.')}
       ${kpi('Leads', cur.leads ?? 0, delta(cur.leads, prev.leads, true), 'Ingevulde leadformulieren volgens Facebook.')}
@@ -403,7 +403,7 @@ function vRapport() {
   const seg = [['last_7d', '7 dagen'], ['last_30d', '30 dagen'], ['lifetime', 'Hele campagne']].map(([k, l]) => `<button data-rp="${k}" aria-pressed="${k === R.period}">${l}</button>`).join('');
   const max = Math.max(1, ...r.funnel.map((f) => f[1]));
   const periodTxt = R.period === 'lifetime' && r.start ? `sinds ${new Date(r.start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}` : PNAME[R.period];
-  return `<div class="noprint"><h1>Klantrapport</h1><p class="lede">Overzicht om met de klant te delen. Kosten, kosten per lead en CPM staan er bewust niet in.</p>
+  return `<div class="noprint"><button class="btn" data-act="closerapport">Terug naar overzicht</button><h1 style="margin-top:16px">Klantrapport</h1><p class="lede">Overzicht om met de klant te delen. Kosten, kosten per lead en CPM staan er bewust niet in.</p>
     <div class="panel"><div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
       <label class="small">Klant <select id="rporg" style="margin-left:6px">${r.orgs.map(([id, o]) => `<option value="${id}" ${id === R.org ? 'selected' : ''}>${esc(o.name)}</option>`).join('')}</select></label>
       <div class="seg" role="group" aria-label="Periode">${seg}</div>
@@ -709,6 +709,8 @@ document.addEventListener('click', async (e) => {
   const mk = e.target.closest('[data-mk]');
   if (mk) { mkPeriod = mk.dataset.mk; try { localStorage.setItem('mkPeriod', mkPeriod); } catch {} render(); return; }
   const act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'openrapport') { view = 'rapport'; render(); window.scrollTo(0, 0); return; }
+  if (act === 'closerapport') { view = 'home'; render(); window.scrollTo(0, 0); return; }
   if (act === 'rpprint') { const t = document.title; document.title = 'Rapport ' + (rapportData()?.o.name || ''); window.print(); document.title = t; return; }
   if (act === 'rpcsv') { rapportCsv(); return; }
   if (act === 'chatback') { CH.sel = null; renderChatsInPlace(); return; }
